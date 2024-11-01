@@ -1,0 +1,11 @@
+---
+clickhouse:
+  hosts:
+    clickhouse-01:
+      ansible_user: centos
+      ansible_host: ${ clickhouse_ip }
+vector:
+  hosts:
+    vector-01:
+      ansible_user: centos
+      ansible_host: ${ vector_ip }

@@ -1,0 +1,97 @@
+---
+- name: Install Clickhouse
+  hosts: clickhouse
+  tags:
+    - clickhouse
+  handlers:
+    - name: Start clickhouse service
+      become: true
+      ansible.builtin.service:
+        name: clickhouse-server
+        state: restarted
+  tasks:
+    - block:
+        - name: Get clickhouse distrib
+          ansible.builtin.get_url:
+            url: "https://packages.clickhouse.com/rpm/stable/{{ item }}-{{ clickhouse_version }}.x86_64.rpm"
+            dest: "./{{ item }}-{{ clickhouse_version }}.rpm"
+          with_items: "{{ clickhouse_packages }}"
+      rescue:
+        - name: Get clickhouse distrib
+          ansible.builtin.get_url:
+            url: "https://packages.clickhouse.com/rpm/stable/clickhouse-common-static-{{ clickhouse_version }}.x86_64.rpm"
+            dest: "./clickhouse-common-static-{{ clickhouse_version }}.rpm"
+    - name: Install clickhouse packages
+      become: true
+      ansible.builtin.yum:
+        name:
+          - clickhouse-common-static-{{ clickhouse_version }}.rpm
+          - clickhouse-client-{{ clickhouse_version }}.rpm
+          - clickhouse-server-{{ clickhouse_version }}.rpm
+      notify: Start clickhouse service
+    - name: Flush handlers
+      meta: flush_handlers
+    - name: Create database
+      command: "clickhouse-client -q 'create database logs;'"
+      register: create_db
+      failed_when: create_db.rc != 0 and create_db.rc !=82
+      changed_when: create_db.rc == 0
+
+- name: Установка и настройка Vector
+  hosts: vector
+  tags:
+    - vector
+  become: true
+  tasks:
+    - name: Скачать дистрибутив Vector
+      get_url:
+        url: https://packages.timber.io/vector/0.42.0/vector-{{ vector_version }}-x86_64-unknown-linux-musl.tar.gz
+        dest: /tmp/vector.tar.gz
+    - name: Распаковать Vector
+      unarchive:
+          remote_src: true
+          src: /tmp/vector.tar.gz
+          dest: /tmp
+
+    - name: Install binary
+      copy:
+        remote_src: true
+        src: /tmp/vector-x86_64-unknown-linux-musl/bin
+        dest: "{{ vector_install_dir }}"
+
+    - name: Create a symbolic link
+      file:
+        remote_src: true
+        src: "{{ vector_install_dir }}/bin/vector"
+        dest: /usr/bin/vector
+        state: link
+        mode: '0755'
+
+    - name: Создать каталог конфигурации Vector
+      file:
+          path: /etc/vector/
+          state: directory
+
+    - name: Создать файл конфигурации Vector из шаблона
+      template:
+          src: templates/vector_config.j2
+          dest: /etc/vector/vector.yaml
+          mode: '0644'
+      notify: Restart Vector
+
+    - name: Install Binary
+      copy:
+        src: vector.service
+        dest: /etc/systemd/system/
+
+    - name: Запустить Vector в фоне
+      systemd:
+          name: vector
+          enabled: yes
+          daemon_reload: yes
+
+  handlers:
+      - name: Restart Vector
+        service:
+          name: vector
+          state: restarted

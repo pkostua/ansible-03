@@ -1,0 +1,11 @@
+[Unit]
+Description=vector
+After=network.target
+
+[Service]
+User=centos
+ExecStart=/usr/bin/vector
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
