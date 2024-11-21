@@ -1,5 +1,5 @@
-# Решение домашнего задания к занятию 2 «Работа с Playbook»
-https://github.com/netology-code/mnt-homeworks/tree/MNT-video/08-ansible-02-playbook
+# Решение домашнего задания к занятию 3 «Использование Ansible»
+https://github.com/netology-code/mnt-homeworks/blob/MNT-video/08-ansible-03-yandex/README.md
 
 ### О репозитории
 Репозиторий состоит из двух частей  
