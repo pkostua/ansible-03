@@ -95,3 +95,56 @@
         service:
           name: vector
           state: restarted
+
+
+- name: Установка и настройка LightHouse
+  hosts: lighthouse
+  tags:
+    - lighthouse
+  become: yes
+  tasks:
+    - name: Установка необходимых пакетов
+      package:
+        name:
+          - unzip
+          - curl
+        state: present
+
+    - name: Скачивание статического файла LightHouse
+      get_url:
+        url: "{{ lighthouse_static_url }}"
+        dest: "/tmp/lighthouse-cli.zip"
+    - name: Creates directory
+      ansible.builtin.file:
+        path: "{{ lighthouse_static_dir }}"
+        state: directory
+    - name: Распаковка LightHouse
+      unarchive:
+        src: "/tmp/lighthouse-cli.zip"
+        dest: "{{ lighthouse_static_dir }}"
+        remote_src: yes
+
+
+    - name: Установка epel-release на CentOS/RHEL
+      yum:
+        name: epel-release
+        state: present
+    - name: Установка Nginx на CentOS/RHEL
+      yum:
+        name: nginx
+        state: present
+
+    - name: Настройка конфигурации Nginx для LightHouse
+      template:
+        src: "{{ nginx_conf_template }}"
+        dest: "/etc/nginx/conf.d/lighthouse.conf"
+
+    - name: Перезапуск Nginx для применения изменений
+      service:
+        name: nginx
+        state: restarted
+
+    - name: Убедиться, что Nginx запущен и работает
+      service:
+        name: nginx
+        state: started

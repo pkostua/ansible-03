@@ -3,12 +3,13 @@ resource "local_file" "ansible_inventory" {
   content  = templatefile("${path.module}/inventory.tftpl", {
     vector_ip   = yandex_compute_instance.vector.network_interface[0].nat_ip_address
     clickhouse_ip = yandex_compute_instance.clickhouse.network_interface[0].nat_ip_address
+    lighthouse_ip = yandex_compute_instance.lighthouse.network_interface[0].nat_ip_address
   })
 }
 
 resource "null_resource" "web_hosts_provision" {
   #Ждем создания инстанса
-  depends_on = [yandex_compute_instance.clickhouse, yandex_compute_instance.vector]
+  depends_on = [yandex_compute_instance.clickhouse, yandex_compute_instance.vector, yandex_compute_instance.lighthouse]
 
   #Добавление ПРИВАТНОГО ssh ключа в ssh-agent
   provisioner "local-exec" {

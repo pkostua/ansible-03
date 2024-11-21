@@ -1,0 +1,4 @@
+---
+lighthouse_static_url: "https://codeload.github.com/VKCOM/lighthouse/zip/refs/heads/master"
+lighthouse_static_dir: "/var/www/lighthouse"
+nginx_conf_template: "nginx_lighthouse.conf.j2"

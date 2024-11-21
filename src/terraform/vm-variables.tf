@@ -27,6 +27,11 @@ variable "vms_resources" {
       cores=2
       memory=2
       core_fraction=20
+    },
+    lighthouse = {
+      cores=2
+      memory=2
+      core_fraction=20
     }
   }
   description = "Определяет параметры ВМ"
